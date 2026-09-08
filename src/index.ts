@@ -1,1 +1,1 @@
-console.log("Limitra ")
+console.log("Redis Rate Limiter starting...");
