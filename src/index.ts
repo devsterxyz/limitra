@@ -1,11 +1,12 @@
 import redis from "./redis/client.js";
+import { checkRateLimit } from "./rate-limiter/fixed-window.js";
 
 await redis.connect();
 
-await redis.set("hello", "from TypeScript");
+const ip = "192.168.1.10";
 
-const value = await redis.get("hello");
+for (let i = 1; i <= 12; i++) {
+  const result = await checkRateLimit(ip);
 
-console.log(value);
-
-// console.log("Connected to Redis!");
+  console.log(`Request ${i}:`, result);
+}
