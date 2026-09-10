@@ -8,4 +8,5 @@ redis.on("error", (error) => {
   console.error("Redis Client Error", error);
 });
 
+
 export default redis;

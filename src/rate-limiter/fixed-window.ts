@@ -10,12 +10,8 @@ export async function checkRateLimit(ip: string) {
 
   const currReqCount = Number(await redis.incr(key))
 
-  if(currReqCount > rateLimit){
-    return {
-      allowed: false,
-      count: currReqCount,
-    }
-  }
+  const remainingReq = Math.max(0, rateLimit - currReqCount)
+
 
   if(currReqCount === 1){
     const currentSecond = Math.floor(Date.now() / 1000);
@@ -23,8 +19,22 @@ export async function checkRateLimit(ip: string) {
     const secondsRemaining = windowSize - secondsIntoWindow;
     await redis.expire(key, secondsRemaining);
   }
+
+  const resetTime = await redis.ttl(key)
+
+  if(currReqCount > rateLimit){
+    return {
+      allowed: false,
+      count: currReqCount,
+      remaining: remainingReq,
+      reset: resetTime
+    }
+  }
+
   return {
     allowed: true,
     count: currReqCount,
+    remaining: remainingReq,
+    reset: resetTime
   }
 }

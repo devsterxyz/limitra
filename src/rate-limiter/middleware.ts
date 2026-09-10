@@ -9,11 +9,14 @@ export async function rateLimiter(req: Request, res: Response, next: NextFunctio
     })
   }
   const result = await checkRateLimit(ip);
+  res.set("X-RateLimit-Limit", "10");
+  res.set("X-RateLimit-Remaining", String(result.remaining));
+  res.set("X-RateLimit-Reset", String(result.reset));
   if(!result.allowed){
     return res
       .status(429)
       .json({
-        "message": "too many request"
+        "message": "Too many requests "
       })
   }
   next()
