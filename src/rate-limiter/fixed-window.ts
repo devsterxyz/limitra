@@ -1,11 +1,11 @@
-import redis from "../redis/client.js";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import redis from "../redis/client.js"
+import { readFileSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 
 const fixedWindowScript = readFileSync(
   fileURLToPath(new URL("./scripts/fixed-window.lua", import.meta.url)),
   "utf8"
-);
+)
 
 export async function checkRateLimit(ip: string) {
   const rateLimit = 10
@@ -24,7 +24,7 @@ export async function checkRateLimit(ip: string) {
       keys: [key],
       arguments: [String(secondsRemaining)],
     })
-  );
+  )
 
   const remainingReq = Math.max(0, rateLimit - currReqCount);
 
