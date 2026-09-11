@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && copyfiles -u 1 \"src/**/*.lua\" dist",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -17,6 +17,7 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^26.5.0",
+    "copyfiles": "^2.4.1",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0"
