@@ -2,6 +2,7 @@ import redis from "../redis/client.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
+import { RATE_LIMIT, WINDOW_SIZE } from "./config.js";
 
 const slidingWindowScript = readFileSync(
   fileURLToPath(
@@ -11,13 +12,11 @@ const slidingWindowScript = readFileSync(
 );
 
 export async function checkSlidingWindow(ip: string) {
-  const rateLimit = 10;
-  const windowSize = 60;
 
   const key = `rate-limit:sliding:${ip}`;
 
   const currentTime = Date.now();
-  const windowStart = currentTime - windowSize * 1000;
+  const windowStart = currentTime - WINDOW_SIZE * 1000;
 
   const requestId = randomUUID();
 
@@ -26,7 +25,7 @@ export async function checkSlidingWindow(ip: string) {
     arguments: [
       String(windowStart),
       String(currentTime),
-      String(rateLimit),
+      String(RATE_LIMIT),
       requestId,
     ],
   });
@@ -38,6 +37,6 @@ export async function checkSlidingWindow(ip: string) {
   return {
     allowed,
     count,
-    remaining: Math.max(0, rateLimit - count),
+    remaining: Math.max(0, RATE_LIMIT - count),
   };
 }

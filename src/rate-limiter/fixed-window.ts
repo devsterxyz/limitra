@@ -1,6 +1,7 @@
 import redis from "../redis/client.js"
 import { readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
+import { RATE_LIMIT, WINDOW_SIZE } from "./config.js";
 
 const fixedWindowScript = readFileSync(
   fileURLToPath(new URL("./scripts/fixed-window.lua", import.meta.url)),
@@ -8,16 +9,14 @@ const fixedWindowScript = readFileSync(
 )
 
 export async function checkRateLimit(ip: string) {
-  const rateLimit = 10
-  const windowSize = 60
 
-  const currentWindow = Math.floor(Date.now() / 1000 / windowSize)
+  const currentWindow = Math.floor(Date.now() / 1000 / WINDOW_SIZE)
 
   const key = `rate-limit:${ip}:${currentWindow}`
 
   const currentSecond = Math.floor(Date.now() / 1000)
-  const secondsIntoWindow = currentSecond % windowSize
-  const secondsRemaining = windowSize - secondsIntoWindow
+  const secondsIntoWindow = currentSecond % WINDOW_SIZE
+  const secondsRemaining = WINDOW_SIZE - secondsIntoWindow
 
   const currReqCount = Number(
     await redis.eval(fixedWindowScript, {
@@ -26,11 +25,11 @@ export async function checkRateLimit(ip: string) {
     })
   )
 
-  const remainingReq = Math.max(0, rateLimit - currReqCount);
+  const remainingReq = Math.max(0, RATE_LIMIT - currReqCount);
 
   const resetTime = await redis.ttl(key)
 
-  if(currReqCount > rateLimit){
+  if(currReqCount > RATE_LIMIT){
     return {
       allowed: false,
       count: currReqCount,
