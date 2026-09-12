@@ -2,9 +2,9 @@ import { beforeAll, afterAll, beforeEach, describe, expect, it } from "vitest";
 import redis, {
   connectRedis,
   disconnectRedis,
-} from "../redis/client.js";
+} from "../src/redis/client.js";
 
-import { checkSlidingWindow } from "../rate-limiter/sliding-window.js";
+import { checkSlidingWindow } from "../src/rate-limiter/sliding-window.js";
 
 describe("Sliding Window Rate Limiter", () => {
   beforeAll(async () => {

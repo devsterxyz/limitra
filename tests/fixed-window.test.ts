@@ -1,8 +1,8 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it } from "vitest"
 
-import redis, {connectRedis, disconnectRedis} from "../redis/client.js"
+import redis, {connectRedis, disconnectRedis} from "../src/redis/client.js"
 
-import { checkRateLimit } from "../rate-limiter/fixed-window.js"
+import { checkRateLimit } from "../src/rate-limiter/fixed-window.js"
 
 describe("Fixed Window Rate Limiter", () => {
   beforeAll(async () => {
