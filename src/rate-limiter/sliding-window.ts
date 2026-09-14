@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { RATE_LIMIT, WINDOW_SIZE } from "./config.js";
+import type { RateLimiter, RateLimitResult } from "./types.js";
 
 const slidingWindowScript = readFileSync(
   fileURLToPath(
@@ -11,32 +12,33 @@ const slidingWindowScript = readFileSync(
   "utf8"
 );
 
-export async function checkSlidingWindow(ip: string) {
 
-  const key = `rate-limit:sliding:${ip}`;
+export class SlidingWindowLimiter implements RateLimiter {
+  async check(ip: string): Promise<RateLimitResult> {
+    const key = `rate-limit:sliding:${ip}`
 
-  const currentTime = Date.now();
-  const windowStart = currentTime - WINDOW_SIZE * 1000;
+    const currentTime = Date.now()
+    const windowStart = currentTime - WINDOW_SIZE * 1000
 
-  const requestId = randomUUID();
+    const requestId = randomUUID()
 
-  const result = await redis.eval(slidingWindowScript, {
-    keys: [key],
-    arguments: [
-      String(windowStart),
-      String(currentTime),
-      String(RATE_LIMIT),
-      requestId,
-    ],
-  });
+    const result = await redis.eval(slidingWindowScript, {
+      keys: [key],
+      arguments: [
+        String(windowStart),
+        String(currentTime),
+        String(RATE_LIMIT),
+        requestId,
+      ],
+    })
 
-  const [allowedFlag, count] = result as [number, number];
+    const [allowedFlag, count] = result as [number, number]
+    const allowed = allowedFlag === 1
 
-  const allowed = allowedFlag === 1;
-
-  return {
-    allowed,
-    count,
-    remaining: Math.max(0, RATE_LIMIT - count),
-  };
-}
+    return {
+      allowed,
+      count,
+      remaining: Math.max(0, RATE_LIMIT - count),
+    }
+  }
+} 

@@ -1,10 +1,10 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it, } from "vitest"
-
 import redis, { connectRedis, disconnectRedis, } from "../src/redis/client.js"
+import { TokenBucketLimiter } from "../src/rate-limiter/token-bucket.js"
 
-import { checkTokenBucket } from "../src/rate-limiter/token-bucket.js"
 
 describe("Token Bucket Rate Limiter", () => {
+  const limiter = new TokenBucketLimiter();
   beforeAll(async () => {
     await connectRedis()
   });
@@ -19,20 +19,18 @@ describe("Token Bucket Rate Limiter", () => {
 
   it("allows the first request", async () => {
     const ip = "test-ip"
-
-    const result = await checkTokenBucket(ip)
+    const result = await limiter.check(ip)
 
     expect(result?.allowed).toBe(true)
     expect(result?.remaining).toBe(9)
-  });
+  })
 
   it("allows 10 requests from the full bucket", async () => {
     const ip = "test-ip"
-
     let result
 
-    for (let i = 0; i < 10; i++) {
-      result = await checkTokenBucket(ip)
+    for(let i = 0; i < 10; i++){
+      result = await limiter.check(ip)
     }
 
     expect(result?.allowed).toBe(true)
@@ -42,11 +40,11 @@ describe("Token Bucket Rate Limiter", () => {
   it("rejects when the bucket is empty", async () => {
     const ip = "test-ip";
 
-    for (let i = 0; i < 10; i++) {
-      await checkTokenBucket(ip)
+    for(let i = 0; i < 10; i++){
+      await limiter.check(ip)
     }
 
-    const result = await checkTokenBucket(ip)
+    const result = await limiter.check(ip)
 
     expect(result.allowed).toBe(false)
     expect(result.remaining).toBe(0)
@@ -63,7 +61,7 @@ describe("Token Bucket Rate Limiter", () => {
       lastRefill: String(twoSecondsAgo),
     })
 
-    const result = await checkTokenBucket(ip)
+    const result = await limiter.check(ip)
 
     expect(result.allowed).toBe(true)
     expect(result.remaining).toBe(1)
@@ -73,11 +71,7 @@ describe("Token Bucket Rate Limiter", () => {
     const ip = "concurrent-test"
 
     const results = await Promise.all(
-      Array.from(
-        { length: 100 },
-        () => checkTokenBucket(ip)
-      )
-    )
+      Array.from({ length: 100 }, () => limiter.check(ip)))
 
     const allowed = results.filter(
       (result) => result.allowed
