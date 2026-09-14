@@ -1,7 +1,10 @@
 import express from "express";
-import { rateLimiter } from "./rate-limiter/middleware.js";
+import { createRateLimiter } from "./rate-limiter/factory.js"
+import { createRateLimitMiddleware } from "./rate-limiter/middleware.js"
 
 const app = express();
+const limiter = createRateLimiter("token-bucket");
+const rateLimitMiddleware = createRateLimitMiddleware(limiter);
 
 app.get("/", (_req, res) => {
   res.json({
@@ -9,7 +12,7 @@ app.get("/", (_req, res) => {
   });
 });
 
-app.get("/api/test", rateLimiter, (_req, res) => {
+app.get("/api/test", rateLimitMiddleware, (_req, res) => {
   res.json({
     message: "Request allowed"
   });

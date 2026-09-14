@@ -1,23 +1,35 @@
-import type { Request, Response, NextFunction } from "express";
-import { checkRateLimit } from "./fixed-window.js";
+import type { Request, Response, NextFunction } from "express"
+import type { RateLimiter } from "./types.js"
 
-export async function rateLimiter(req: Request, res: Response, next: NextFunction){
-  const ip = req.ip;
-  if(!ip){
-    return res.json({
-      "message": "ip not provided"
-    })
-  }
-  const result = await checkRateLimit(ip);
-  res.set("X-RateLimit-Limit", "10");
-  res.set("X-RateLimit-Remaining", String(result.remaining));
-  res.set("X-RateLimit-Reset", String(result.reset));
-  if(!result.allowed){
-    return res
-      .status(429)
-      .json({
-        "message": "Too many requests "
+export function createRateLimitMiddleware(limiter: RateLimiter){
+  return async function rateLimitMiddleware(req: Request, res: Response, next: NextFunction){
+    const ip = req.ip
+
+    if(!ip){
+      return res.status(400).json({
+        message: "IP address not available",
       })
+    }
+    const result = await limiter.check(ip)
+
+    res.set("X-RateLimit-Remaining", String(result.remaining))
+
+    if(result.count !== undefined){
+      res.set("X-RateLimit-Count", String(result.count))
+    }
+
+    if(result.reset !== undefined){
+      res.set("X-RateLimit-Reset", String(result.reset))
+    }
+
+    if(!result.allowed){
+      return res
+        .status(429)
+        .json({
+          message: "Too many requests",
+        })
+    }
+
+    next()
   }
-  next()
 }
