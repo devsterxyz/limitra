@@ -1,0 +1,62 @@
+local key = KEYS[1]
+
+local currentTime = tonumber(ARGV[1])
+local capacity = tonumber(ARGV[2])
+local refillRate = tonumber(ARGV[3])
+local requestCost = tonumber(ARGV[4])
+
+local tokens = redis.call("HGET", key, "tokens")
+local lastRefill = redis.call("HGET", key, "lastRefill")
+
+if not tokens or not lastRefill then
+  local remaining = capacity - requestCost
+
+  redis.call(
+    "HSET",
+    key,
+    "tokens",
+    remaining,
+    "lastRefill",
+    currentTime
+  )
+
+  return {1, remaining}
+end
+
+tokens = tonumber(tokens)
+lastRefill = tonumber(lastRefill)
+
+local elapsed = currentTime - lastRefill
+
+local tokensToAdd = (elapsed / 1000) * refillRate
+
+local refilledTokens = math.min(
+  capacity,
+  tokens + tokensToAdd
+)
+
+if refilledTokens < requestCost then
+  redis.call(
+    "HSET",
+    key,
+    "tokens",
+    refilledTokens,
+    "lastRefill",
+    currentTime
+  )
+
+  return {0, refilledTokens}
+end
+
+local remaining = refilledTokens - requestCost
+
+redis.call(
+  "HSET",
+  key,
+  "tokens",
+  remaining,
+  "lastRefill",
+  currentTime
+)
+
+return {1, remaining}

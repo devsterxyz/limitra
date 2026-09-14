@@ -1,59 +1,38 @@
-import redis from "../redis/client.js"
-import { RATE_LIMIT } from "./config.js"
+import redis from "../redis/client.js";
+import { RATE_LIMIT } from "./config.js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+const tokenBucketScript = readFileSync(
+  fileURLToPath(
+    new URL("./scripts/token-bucket.lua", import.meta.url)
+  ),
+  "utf8"
+);
 
 export async function checkTokenBucket(ip: string) {
-  const capacity = RATE_LIMIT
-  const refillRate = 1
+  const capacity = RATE_LIMIT;
+  const refillRate = 1;
+  const requestCost = 1;
 
-  const key = `rate-limit:token:${ip}`
+  const key = `rate-limit:token:${ip}`;
 
-  const currentTime = Date.now()
-  const bucket = await redis.hGetAll(key)
+  const currentTime = Date.now();
 
-  if (!bucket.tokens || !bucket.lastRefill) {
-    await redis.hSet(key, {
-      tokens: String(capacity - 1),
-      lastRefill: String(currentTime),
-    })
+  const result = await redis.eval(tokenBucketScript, {
+    keys: [key],
+    arguments: [
+      String(currentTime),
+      String(capacity),
+      String(refillRate),
+      String(requestCost),
+    ],
+  });
 
-    return {
-      allowed: true,
-      remaining: capacity - 1,
-    }
-  }
+  const [allowedFlag, remaining] = result as [number, number];
 
-  const tokens = Number(bucket.tokens)
-  const lastRefill = Number(bucket.lastRefill)
-
-  const elapsed = currentTime - lastRefill
-
-  const tokensToAdd = elapsed / 1000 * refillRate
-
-  const refilledTokens = Math.min(
-    capacity,
-    tokens + tokensToAdd
-  )
-
-  if (refilledTokens < 1) {
-    await redis.hSet(key, {
-      tokens: String(refilledTokens),
-      lastRefill: String(currentTime),
-    })
-
-    return {
-      allowed: false,
-      remaining: 0,
-    }
-  }
-
-  const remainingTokens = refilledTokens - 1;
-  await redis.hSet(key, {
-    tokens: String(remainingTokens),
-    lastRefill: String(currentTime),
-  })
   return {
-    allowed: true,
-    remaining: Math.floor(remainingTokens),
-  }
-
+    allowed: allowedFlag === 1,
+    remaining: Math.floor(remaining),
+  };
 }
