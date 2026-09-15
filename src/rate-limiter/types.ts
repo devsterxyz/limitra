@@ -1,8 +1,9 @@
 export interface RateLimitResult {
   allowed: boolean;
-  count?: number;
+  count: number;
   remaining: number;
   reset?: number;
+  limit: number;
 }
 
 export type RateLimiterAlgorithm =
@@ -13,3 +14,4 @@ export type RateLimiterAlgorithm =
 export interface RateLimiter {
   check(ip: string): Promise<RateLimitResult>;
 }
+

@@ -33,9 +33,13 @@ export class TokenBucketLimiter implements RateLimiter {
 
     const [allowedFlag, remaining] = result as [number, number]
 
+    const normalizedRemaining = Math.floor(remaining)
+
     return {
       allowed: allowedFlag === 1,
-      remaining: Math.floor(remaining),
+      remaining: normalizedRemaining,
+      limit: RATE_LIMIT,
+      count: Math.max(0, RATE_LIMIT - normalizedRemaining),
     }
   }
 }

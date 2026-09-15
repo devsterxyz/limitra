@@ -38,7 +38,8 @@ export class FixedWindowLimiter implements RateLimiter {
         allowed: false,
         count: currReqCount,
         remaining: remainingReq,
-        reset: resetTime
+        reset: resetTime,
+        limit: RATE_LIMIT,
       }
     }
 
@@ -46,7 +47,8 @@ export class FixedWindowLimiter implements RateLimiter {
       allowed: true,
       count: currReqCount,
       remaining: remainingReq,
-      reset: resetTime
+      reset: resetTime,
+      limit: RATE_LIMIT,
     }
   }
 }
