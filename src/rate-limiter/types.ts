@@ -5,6 +5,11 @@ export interface RateLimitResult {
   reset?: number;
 }
 
+export type RateLimiterAlgorithm =
+  | "fixed"
+  | "sliding"
+  | "token-bucket"
+
 export interface RateLimiter {
   check(ip: string): Promise<RateLimitResult>;
 }

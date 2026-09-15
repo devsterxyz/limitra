@@ -1,10 +1,11 @@
-import { connectRedis } from "./redis/client.js";
-import app from "./app.js";
+import "dotenv/config"
+import { connectRedis } from "./redis/client.js"
+import app from "./app.js"
 
-const PORT = 3000;
+const PORT = 3000
 
-await connectRedis();
+await connectRedis()
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+  console.log(`Server running on http://localhost:${PORT}`)
+})
