@@ -1,25 +1,24 @@
 import express from "express";
-import { createRateLimiter } from "./rate-limiter/factory.js"
-import { createRateLimitMiddleware } from "./rate-limiter/middleware.js"
-import { getRateLimiterAlgorithm } from "./rate-limiter/config.js";
+import type { RateLimiter } from "./rate-limiter/types.js";
+import { createRateLimitMiddleware } from "./rate-limiter/middleware.js";
 
-const app = express()
 
-const algorithm = getRateLimiterAlgorithm()
-const limiter = createRateLimiter(algorithm)
+function createApp(limiter: RateLimiter){
+  const app = express()
+  const rateLimitMiddleware = createRateLimitMiddleware(limiter)
 
-const rateLimitMiddleware = createRateLimitMiddleware(limiter)
-
-app.get("/", (_req, res) => {
-  res.json({
-    message: "Rate limiter API is running",
+  app.get("/", (_req, res) => {
+    res.json({
+      message: "Rate limiter API is running",
+    })
   })
-})
 
-app.get("/api/test", rateLimitMiddleware, (_req, res) => {
-  res.json({
-    message: "Request allowed"
+  app.get("/api/test", rateLimitMiddleware, (_req, res) => {
+    res.json({
+      message: "Request allowed"
+    })
   })
-})
+  return app
+}
 
-export default app
+export default createApp
