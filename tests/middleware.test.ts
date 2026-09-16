@@ -39,5 +39,6 @@ describe("Rate Limit Middleware", () => {
     expect(response[10]?.status).toBe(429)
     expect(response[10]?.headers["x-ratelimit-limit"]).toBe("10")
     expect(response[10]?.headers["x-ratelimit-remaining"]).toBeDefined()
+    expect(response[10]?.headers["retry-after"]).toBeDefined()
   })
 })

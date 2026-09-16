@@ -19,4 +19,8 @@ describe("Rate Limiter Factory", () => {
     const limiter = createRateLimiter("token-bucket")
     expect(limiter).toBeInstanceOf(TokenBucketLimiter)
   })
+
+  it("throws an error for an unsupported algorithm", () => {
+    expect(() => {createRateLimiter("banana" as any)}).toThrow(Error)
+  })
 })
