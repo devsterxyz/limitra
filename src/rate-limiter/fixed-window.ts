@@ -36,7 +36,6 @@ export class FixedWindowLimiter implements RateLimiter {
     if(currReqCount > RATE_LIMIT){
       return {
         allowed: false,
-        count: currReqCount,
         remaining: remainingReq,
         reset: resetTime,
         limit: RATE_LIMIT,
@@ -45,7 +44,6 @@ export class FixedWindowLimiter implements RateLimiter {
 
     return {
       allowed: true,
-      count: currReqCount,
       remaining: remainingReq,
       reset: resetTime,
       limit: RATE_LIMIT,

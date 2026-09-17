@@ -1,6 +1,5 @@
 export interface RateLimitResult {
   allowed: boolean;
-  count: number;
   remaining: number;
   reset?: number;
   limit: number;

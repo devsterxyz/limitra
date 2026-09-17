@@ -39,7 +39,6 @@ export class TokenBucketLimiter implements RateLimiter {
       allowed: allowedFlag === 1,
       remaining: normalizedRemaining,
       limit: RATE_LIMIT,
-      count: Math.max(0, RATE_LIMIT - normalizedRemaining),
     }
   }
 }

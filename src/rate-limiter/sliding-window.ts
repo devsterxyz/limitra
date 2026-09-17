@@ -37,7 +37,6 @@ export class SlidingWindowLimiter implements RateLimiter {
 
     return {
       allowed,
-      count,
       remaining: Math.max(0, RATE_LIMIT - count),
       limit: RATE_LIMIT,
     }

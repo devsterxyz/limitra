@@ -21,7 +21,6 @@ describe("Fixed Window Rate Limiter", () => {
     const result = await limiter.check(ip)
 
     expect(result.allowed).toBe(true)
-    expect(result.count).toBe(1)
     expect(result.remaining).toBe(9)
   })
 
@@ -34,7 +33,6 @@ describe("Fixed Window Rate Limiter", () => {
     }
 
     expect(result?.allowed).toBe(true)
-    expect(result?.count).toBe(10)
     expect(result?.remaining).toBe(0)
   })
 
@@ -47,7 +45,6 @@ describe("Fixed Window Rate Limiter", () => {
     }
 
     expect(result?.allowed).toBe(false)
-    expect(result?.count).toBe(11)
     expect(result?.remaining).toBe(0)
   })
 

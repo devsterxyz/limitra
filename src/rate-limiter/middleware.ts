@@ -16,10 +16,6 @@ export function createRateLimitMiddleware(limiter: RateLimiter){
 
     res.set("X-RateLimit-Limit", String(result.limit))
 
-    if(result.count !== undefined){
-      res.set("X-RateLimit-Count", String(result.count))
-    }
-
     if(result.reset !== undefined){
       res.set("X-RateLimit-Reset", String(result.reset))
     }
