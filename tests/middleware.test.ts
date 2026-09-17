@@ -1,12 +1,15 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it } from "vitest"
 import request from "supertest"
 import redis, { connectRedis, disconnectRedis } from "../src/redis/client.js"
-import app from "../src/app.js"
+import createApp from "../src/app.js"
+import { createRateLimiter } from "../src/rate-limiter/factory.js"
 
 describe("Rate Limit Middleware", () => {
   beforeAll(async () => {
     await connectRedis()
   })
+  const limiter = createRateLimiter("fixed")
+  const app = createApp(limiter)
 
   afterAll(async () => {
     await disconnectRedis()
