@@ -29,6 +29,7 @@ export class SlidingWindowLimiter implements RateLimiter {
         String(currentTime),
         String(RATE_LIMIT),
         requestId,
+        String(WINDOW_SIZE * 1000)
       ],
     })
 

@@ -4,6 +4,7 @@ local windowStart = tonumber(ARGV[1])
 local currentTime = tonumber(ARGV[2])
 local rateLimit = tonumber(ARGV[3])
 local requestId = ARGV[4]
+local windowSize = tonumber(ARGV[5])
 
 redis.call("ZREMRANGEBYSCORE", key, 0, windowStart)
 
@@ -14,8 +15,16 @@ local count = redis.call(
   currentTime
 )
 
+
+
 if count >= rateLimit then
-  return {0, count}
+  local oldestRequest = redis.call("ZRANGE", key, 0, 0, "WITHSCORES")
+  local oldestTimestamp = tonumber(oldestRequest[2])
+  local expirationTime = oldestTimestamp + windowSize
+  local retryAfterMs = expirationTime - currentTime
+  local retryAfter = retryAfterMs / 1000
+
+  return {0, count, retryAfter}
 end
 
 redis.call(
