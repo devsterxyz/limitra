@@ -44,8 +44,11 @@ if refilledTokens < requestCost then
     "lastRefill",
     currentTime
   )
+  
+  local tokenNeeded = requestCost - refilledTokens
+  local retryAfter = tokenNeeded / refillRate
 
-  return {0, refilledTokens}
+  return {0, refilledTokens, retryAfter}
 end
 
 local remaining = refilledTokens - requestCost

@@ -31,14 +31,20 @@ export class TokenBucketLimiter implements RateLimiter {
       ],
     });
 
-    const [allowedFlag, remaining] = result as [number, number]
+    const [allowedFlag, remaining, retryAfter] = result as [number, number, number]
 
     const normalizedRemaining = Math.floor(remaining)
 
-    return {
+    const response: RateLimitResult = {
       allowed: allowedFlag === 1,
       remaining: normalizedRemaining,
       limit: RATE_LIMIT,
     }
+
+    if (allowedFlag !== 1) {
+      response.reset = retryAfter
+    }
+
+    return response
   }
 }
