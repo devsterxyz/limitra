@@ -1,6 +1,8 @@
 import express from "express";
 import type { RateLimiter } from "./rate-limiter/types.js";
 import { createRateLimitMiddleware } from "./rate-limiter/middleware.js";
+import type { Request, Response, NextFunction } from "express";
+import { errorHandler } from "./middleware/error-handler.js";
 
 
 function createApp(limiter: RateLimiter){
@@ -18,6 +20,8 @@ function createApp(limiter: RateLimiter){
       message: "Request allowed"
     })
   })
+
+  app.use(errorHandler)
   return app
 }
 

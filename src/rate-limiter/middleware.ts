@@ -10,25 +10,33 @@ export function createRateLimitMiddleware(limiter: RateLimiter){
         message: "IP address not available",
       })
     }
-    const result = await limiter.check(ip)
 
-    res.set("X-RateLimit-Remaining", String(result.remaining))
+    try{
+      const result = await limiter.check(ip)
 
-    res.set("X-RateLimit-Limit", String(result.limit))
+      res.set("X-RateLimit-Remaining", String(result.remaining))
 
-    if(result.reset !== undefined){
-      res.set("X-RateLimit-Reset", String(result.reset))
+      res.set("X-RateLimit-Limit", String(result.limit))
+
+      if(result.reset !== undefined){
+        res.set("X-RateLimit-Reset", String(result.reset))
+      }
+
+      if(!result.allowed){
+        if(result.reset !== undefined){
+          res.set("Retry-After", String(result.reset))
+        }
+        return res
+          .status(429)
+          .json({
+            message: "Too many requests",
+          })
+      }
+
+      next()
     }
-
-    if(!result.allowed){
-      res.set("Retry-After", String(result.reset ?? 0))
-      return res
-        .status(429)
-        .json({
-          message: "Too many requests",
-        })
+    catch(error){
+      next(error)
     }
-
-    next()
   }
 }

@@ -25,6 +25,7 @@ describe("Rate Limit Middleware", () => {
     expect(response.status).toBe(200)
     expect(response.headers["x-ratelimit-limit"]).toBe("10")
     expect(response.headers["x-ratelimit-remaining"]).toBeDefined()
+    expect(response.headers["retry-after"]).toBeUndefined()
   })
 
   it("rejects requests after the rate limit", async () => {
@@ -43,5 +44,7 @@ describe("Rate Limit Middleware", () => {
     expect(response[10]?.headers["x-ratelimit-limit"]).toBe("10")
     expect(response[10]?.headers["x-ratelimit-remaining"]).toBeDefined()
     expect(response[10]?.headers["retry-after"]).toBeDefined()
+    expect(Number(response[10]?.headers["retry-after"])).toBeGreaterThan(0)
+    expect(Number(response[10]?.headers["retry-after"])).toBeLessThanOrEqual(60)
   })
 })

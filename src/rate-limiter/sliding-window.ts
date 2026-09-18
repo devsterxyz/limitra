@@ -33,13 +33,17 @@ export class SlidingWindowLimiter implements RateLimiter {
       ],
     })
 
-    const [allowedFlag, count] = result as [number, number]
-    const allowed = allowedFlag === 1
-
-    return {
-      allowed,
+    const [allowedFlag, count, retryAfter] = result as [number, number, number]
+    const response: RateLimitResult = {
+      allowed: allowedFlag === 1,
       remaining: Math.max(0, RATE_LIMIT - count),
       limit: RATE_LIMIT,
     }
+    
+    if (allowedFlag !== 1) {
+      response.reset = retryAfter
+    } 
+
+    return response
   }
 } 
