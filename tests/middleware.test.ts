@@ -4,12 +4,15 @@ import redis, { connectRedis, disconnectRedis } from "../src/redis/client.js"
 import createApp from "../src/app.js"
 import { createRateLimiter } from "../src/rate-limiter/factory.js"
 import type { RateLimiter } from "../src/rate-limiter/types.js"
+import { getRateLimitConfig } from "../src/rate-limiter/config.js"
 
 describe("Rate Limit Middleware", () => {
   beforeAll(async () => {
     await connectRedis()
   })
-  const limiter = createRateLimiter("fixed")
+  process.env.RATE_LIMIT_ALGORITHM = "fixed"
+  const config = getRateLimitConfig()
+  const limiter = createRateLimiter(config)
   const app = createApp(limiter)
 
   afterAll(async () => {

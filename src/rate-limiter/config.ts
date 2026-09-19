@@ -1,5 +1,12 @@
 import type { RateLimiterAlgorithm } from "./types.js"
 
+export interface RateLimitConfig {
+  algorithm: RateLimiterAlgorithm
+  limit: number
+  windowSize: number
+  // token bucket settings
+}
+
 export function getRateLimiterAlgorithm(): RateLimiterAlgorithm {
   const algorithm = process.env.RATE_LIMIT_ALGORITHM ?? "fixed"
 
@@ -10,6 +17,16 @@ export function getRateLimiterAlgorithm(): RateLimiterAlgorithm {
   }
 
   return algorithm
+}
+
+export function getRateLimitConfig(): RateLimitConfig {
+  const algorithm = getRateLimiterAlgorithm()
+
+  return {
+    algorithm,
+    limit: RATE_LIMIT,
+    windowSize: WINDOW_SIZE,
+  }
 }
 
 export const RATE_LIMIT = 10
