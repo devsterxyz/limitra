@@ -3,6 +3,7 @@ import request from "supertest"
 import redis, { connectRedis, disconnectRedis } from "../src/redis/client.js"
 import createApp from "../src/app.js"
 import { createRateLimiter } from "../src/rate-limiter/factory.js"
+import type { RateLimiter } from "../src/rate-limiter/types.js"
 
 describe("Rate Limit Middleware", () => {
   beforeAll(async () => {
@@ -46,5 +47,20 @@ describe("Rate Limit Middleware", () => {
     expect(response[10]?.headers["retry-after"]).toBeDefined()
     expect(Number(response[10]?.headers["retry-after"])).toBeGreaterThan(0)
     expect(Number(response[10]?.headers["retry-after"])).toBeLessThanOrEqual(60)
+  })
+
+  it("returns 503 when the rate limiter fails", async () => {
+    const fakeLimiter: RateLimiter = {
+      check: async (ip: string) => {
+        throw new Error("Redis unavailable")
+      }
+    }
+
+    const app = createApp(fakeLimiter)
+
+    const response = await request(app).get("/api/test")
+
+    expect(response.status).toBe(503)
+    expect(response.body.message).toBe("Internal server error")
   })
 })
