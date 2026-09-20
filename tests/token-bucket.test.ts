@@ -1,10 +1,12 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it, } from "vitest"
 import redis, { connectRedis, disconnectRedis, } from "../src/redis/client.js"
 import { TokenBucketLimiter } from "../src/rate-limiter/token-bucket.js"
+import { getRateLimitConfig } from "../src/rate-limiter/config.js"
 
 
 describe("Token Bucket Rate Limiter", () => {
-  const limiter = new TokenBucketLimiter();
+  const config = getRateLimitConfig()
+  const limiter = new TokenBucketLimiter(config);
   beforeAll(async () => {
     await connectRedis()
   });
@@ -48,6 +50,7 @@ describe("Token Bucket Rate Limiter", () => {
 
     expect(result.allowed).toBe(false)
     expect(result.remaining).toBe(0)
+    expect(result.reset).toBeGreaterThan(0)
   })
 
   it("refills tokens over time", async () => {
@@ -86,5 +89,23 @@ describe("Token Bucket Rate Limiter", () => {
 
     expect(allowed.length).toBe(10)
     expect(rejected.length).toBe(90)
+  })
+
+  it("returns retry time when the bucket is empty", async () => {
+    const ip = "retry-test"
+    const key = `rate-limit:token:${ip}`
+
+    const now = Date.now()
+
+    await redis.hSet(key, {
+      tokens: "0",
+      lastRefill: String(now),
+    })
+
+    const result = await limiter.check(ip)
+
+    expect(result.allowed).toBe(false)
+    expect(result.remaining).toBe(0)
+    expect(result.reset).toBe(1)
   })
 })

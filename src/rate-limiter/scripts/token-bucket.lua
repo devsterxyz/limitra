@@ -46,7 +46,7 @@ if refilledTokens < requestCost then
   )
   
   local tokenNeeded = requestCost - refilledTokens
-  local retryAfter = tokenNeeded / refillRate
+  local retryAfter = math.ceil(tokenNeeded / refillRate)
 
   return {0, refilledTokens, retryAfter}
 end

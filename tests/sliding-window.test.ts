@@ -1,11 +1,12 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it } from "vitest"
 import redis, { connectRedis, disconnectRedis, } from "../src/redis/client.js"
 import { SlidingWindowLimiter } from "../src/rate-limiter/sliding-window.js"
-import { WINDOW_SIZE } from "../src/rate-limiter/config.js"
+import { getRateLimitConfig, WINDOW_SIZE } from "../src/rate-limiter/config.js"
 
 
 describe("Sliding Window Rate Limiter", () => {
-  const limiter = new SlidingWindowLimiter()
+  const config = getRateLimitConfig()
+  const limiter = new SlidingWindowLimiter(config)
   beforeAll(async () => {
     await connectRedis()
   });

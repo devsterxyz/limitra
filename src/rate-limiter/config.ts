@@ -4,7 +4,8 @@ export interface RateLimitConfig {
   algorithm: RateLimiterAlgorithm
   limit: number
   windowSize: number
-  // token bucket settings
+  refillRate: number
+  requestCost: number
 }
 
 export function getRateLimiterAlgorithm(): RateLimiterAlgorithm {
@@ -26,8 +27,12 @@ export function getRateLimitConfig(): RateLimitConfig {
     algorithm,
     limit: RATE_LIMIT,
     windowSize: WINDOW_SIZE,
+    refillRate: REFILL_RATE,
+    requestCost: REQUEST_COST
   }
 }
 
 export const RATE_LIMIT = 10
 export const WINDOW_SIZE = 60
+export const REFILL_RATE = 1
+export const REQUEST_COST = 1

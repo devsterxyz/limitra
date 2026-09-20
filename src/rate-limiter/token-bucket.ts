@@ -1,5 +1,5 @@
 import redis from "../redis/client.js"
-import { RATE_LIMIT } from "./config.js"
+import type { RateLimitConfig } from "./config.js"
 import { readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import type { RateLimiter, RateLimitResult } from "./types.js"
@@ -12,10 +12,13 @@ const tokenBucketScript = readFileSync(
 )
 
 export class TokenBucketLimiter implements RateLimiter {
+  constructor(private config: RateLimitConfig) {
+
+  }
   async check(ip: string): Promise<RateLimitResult> {
-    const capacity = RATE_LIMIT
-    const refillRate = 1
-    const requestCost = 1
+    const capacity = this.config.limit
+    const refillRate = this.config.refillRate
+    const requestCost = this.config.requestCost
 
     const key = `rate-limit:token:${ip}`
 
@@ -38,7 +41,7 @@ export class TokenBucketLimiter implements RateLimiter {
     const response: RateLimitResult = {
       allowed: allowedFlag === 1,
       remaining: normalizedRemaining,
-      limit: RATE_LIMIT,
+      limit: this.config.limit,
     }
 
     if (allowedFlag !== 1) {

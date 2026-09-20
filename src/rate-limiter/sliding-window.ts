@@ -2,7 +2,7 @@ import redis from "../redis/client.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
-import { RATE_LIMIT, WINDOW_SIZE } from "./config.js";
+import type { RateLimitConfig } from "./config.js"
 import type { RateLimiter, RateLimitResult } from "./types.js";
 
 const slidingWindowScript = readFileSync(
@@ -14,11 +14,14 @@ const slidingWindowScript = readFileSync(
 
 
 export class SlidingWindowLimiter implements RateLimiter {
+  constructor(private config: RateLimitConfig) {
+
+  }
   async check(ip: string): Promise<RateLimitResult> {
     const key = `rate-limit:sliding:${ip}`
 
     const currentTime = Date.now()
-    const windowStart = currentTime - WINDOW_SIZE * 1000
+    const windowStart = currentTime - this.config.windowSize * 1000
 
     const requestId = randomUUID()
 
@@ -27,17 +30,17 @@ export class SlidingWindowLimiter implements RateLimiter {
       arguments: [
         String(windowStart),
         String(currentTime),
-        String(RATE_LIMIT),
+        String(this.config.limit),
         requestId,
-        String(WINDOW_SIZE * 1000)
+        String(this.config.windowSize * 1000)
       ],
     })
 
     const [allowedFlag, count, retryAfter] = result as [number, number, number]
     const response: RateLimitResult = {
       allowed: allowedFlag === 1,
-      remaining: Math.max(0, RATE_LIMIT - count),
-      limit: RATE_LIMIT,
+      remaining: Math.max(0, this.config.limit - count),
+      limit: this.config.limit,
     }
     
     if (allowedFlag !== 1) {

@@ -9,13 +9,13 @@ import type { RateLimitConfig } from "./config.js"
 export function createRateLimiter(config: RateLimitConfig): RateLimiter{
   switch(config.algorithm){
     case "fixed":
-      return new FixedWindowLimiter()
+      return new FixedWindowLimiter(config)
 
     case "sliding":
-      return new SlidingWindowLimiter()
+      return new SlidingWindowLimiter(config)
 
     case "token-bucket":
-      return new TokenBucketLimiter()
+      return new TokenBucketLimiter(config)
 
     default:
       throw new Error(`Unsupported rate limiter: ${config.algorithm}`)
