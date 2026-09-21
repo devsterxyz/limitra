@@ -3,17 +3,21 @@ import request from "supertest"
 import redis, { connectRedis, disconnectRedis } from "../src/redis/client.js"
 import createApp from "../src/app.js"
 import { createRateLimiter } from "../src/rate-limiter/factory.js"
-import type { RateLimiter } from "../src/rate-limiter/types.js"
+import type { RateLimiter, RateLimiterAlgorithm } from "../src/rate-limiter/types.js"
 import { getRateLimitConfig } from "../src/rate-limiter/config.js"
+
+function createTestApp(algorithm: RateLimiterAlgorithm) {
+  process.env.RATE_LIMIT_ALGORITHM = algorithm
+  const config = getRateLimitConfig()
+  const limiter = createRateLimiter(config)
+  const app = createApp(limiter)
+  return app
+}
 
 describe("Rate Limit Middleware", () => {
   beforeAll(async () => {
     await connectRedis()
   })
-  process.env.RATE_LIMIT_ALGORITHM = "fixed"
-  const config = getRateLimitConfig()
-  const limiter = createRateLimiter(config)
-  const app = createApp(limiter)
 
   afterAll(async () => {
     await disconnectRedis()
@@ -23,7 +27,8 @@ describe("Rate Limit Middleware", () => {
     await redis.flushDb()
   })
 
-  it("returns rate limit headers", async () => {
+  it.each(["fixed", "sliding", "token-bucket"])("returns rate limit headers for %s", async (algorithm) => {
+    const app = createTestApp(algorithm as RateLimiterAlgorithm)
     const response = await request(app).get("/api/test")
 
     expect(response.status).toBe(200)
@@ -33,6 +38,7 @@ describe("Rate Limit Middleware", () => {
   })
 
   it("rejects requests after the rate limit", async () => {
+    const app = createTestApp("fixed")
     const response:request.Response[] = [];
     for(let i=0; i<11; i++){
       response.push(await request(app).get("/api/test"))
