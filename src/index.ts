@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { connectRedis } from "./redis/client.js"
+import { connectRedis, disconnectRedis } from "./redis/client.js"
 import { getRateLimitConfig } from "./rate-limiter/config.js"
 import { createRateLimiter } from "./rate-limiter/factory.js"
 import createApp from "./app.js"
@@ -13,6 +13,21 @@ const limiter = createRateLimiter(config)
 
 const app = createApp(limiter)
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
 })
+
+async function shutdown() {
+  await new Promise<void>((resolve) => {
+    server.close(() => {
+      resolve()
+    })
+  })
+
+  await disconnectRedis()
+
+  process.exit(0)
+}
+
+process.on("SIGINT", shutdown)
+process.on("SIGTERM", shutdown)
