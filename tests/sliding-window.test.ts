@@ -1,7 +1,7 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it } from "vitest"
 import redis, { connectRedis, disconnectRedis, } from "../src/redis/client.js"
 import { SlidingWindowLimiter } from "../src/rate-limiter/sliding-window.js"
-import { getRateLimitConfig, WINDOW_SIZE } from "../src/rate-limiter/config.js"
+import { getRateLimitConfig } from "../src/rate-limiter/config.js"
 
 
 describe("Sliding Window Rate Limiter", () => {
@@ -53,7 +53,7 @@ describe("Sliding Window Rate Limiter", () => {
     expect(result?.allowed).toBe(false)
     expect(result?.remaining).toBe(0)
     expect(result?.reset).toBeGreaterThan(0)
-    expect(result?.reset).toBeLessThanOrEqual(WINDOW_SIZE)
+    expect(result?.reset).toBeLessThanOrEqual(config.windowSize)
   });
 
   it("handles concurrent requests", async () => {

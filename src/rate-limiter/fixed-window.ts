@@ -12,27 +12,26 @@ const fixedWindowScript = readFileSync(
 
 
 export class FixedWindowLimiter implements RateLimiter {
-  constructor(private config: RateLimitConfig) {
-
-  }
+  constructor(private config: RateLimitConfig) {}
   async check(ip: string): Promise<RateLimitResult>{
+  const currentTime = Date.now()
+  const currentSecond = Math.floor(currentTime / 1000)
 
-    const currentWindow = Math.floor(Date.now() / 1000 / this.config.windowSize)
+  const currentWindow = Math.floor(currentSecond / this.config.windowSize)
 
-    const key = `rate-limit:${ip}:${currentWindow}`
+  const key = `rate-limit:${ip}:${currentWindow}`
 
-    const currentSecond = Math.floor(Date.now() / 1000)
-    const secondsIntoWindow = currentSecond % this.config.windowSize
-    const secondsRemaining = this.config.windowSize - secondsIntoWindow
+  const secondsIntoWindow = currentSecond % this.config.windowSize
 
-    const currReqCount = Number(
-      await redis.eval(fixedWindowScript, {
-        keys: [key],
-        arguments: [String(secondsRemaining)],
-      })
-    )
+  const secondsRemaining = this.config.windowSize - secondsIntoWindow
 
-    const remainingReq = Math.max(0, this.config.limit - currReqCount);
+  const currReqCount = Number(
+    await redis.eval(fixedWindowScript, {
+      keys: [key],
+      arguments: [String(secondsRemaining)],
+    })
+  )
+    const remainingReq = Math.max(0, this.config.limit - currReqCount)
 
     const resetTime = await redis.ttl(key)
 
