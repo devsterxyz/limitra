@@ -15,23 +15,21 @@ local count = redis.call(
   currentTime
 )
 
-
-
 if count >= rateLimit then
   local oldestRequest = redis.call("ZRANGE", key, 0, 0, "WITHSCORES")
-  local oldestTimestamp = tonumber(oldestRequest[2])
-  local expirationTime = oldestTimestamp + windowSize
-  local retryAfterMs = expirationTime - currentTime
-  local retryAfter = retryAfterMs / 1000
+
+  local retryAfter = windowSize
+
+  if #oldestRequest > 0 then
+    local oldestTimestamp = tonumber(oldestRequest[2])
+    retryAfter = math.ceil(
+      (oldestTimestamp + windowSize - currentTime) / 1000
+    )
+  end
 
   return {0, count, retryAfter}
 end
 
-redis.call(
-  "ZADD",
-  key,
-  currentTime,
-  requestId
-)
+redis.call("ZADD", key, currentTime, requestId)
 
-return {1, count + 1}
+return {1, count + 1, 0}
