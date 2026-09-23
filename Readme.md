@@ -126,7 +126,7 @@ redis-server --version
 Clone the repository and move into the project directory:
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/devsterxyz/limitra.git
 cd limitra
 ```
 
@@ -504,7 +504,7 @@ limitra/
 ├── package.json
 ├── tsconfig.json
 ├── tsconfig.test.json
-├── .env
+├── .env.example
 └── README.md
 ```
 
@@ -726,4 +726,4 @@ Possible improvements for future versions include:
 
 ## License
 
-This project is licensed under the ISC License.
+This project is licensed under the MIT License.
