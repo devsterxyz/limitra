@@ -222,23 +222,28 @@ http://localhost:3000
 
 ### Test the Rate Limiter
 
-The project includes a test endpoint:
+The project exposes three algorithm-specific test endpoints, one for each rate-limiting algorithm:
 
-```http
-GET /api/test
-```
+| Endpoint | Algorithm |
+|---|---|
+| `GET /api/test/fixed` | Fixed Window |
+| `GET /api/test/sliding` | Sliding Window |
+| `GET /api/test/token-bucket` | Token Bucket |
 
 Send a request using `curl`:
 
 ```bash
-curl http://localhost:3000/api/test
+curl http://localhost:3000/api/test/fixed
+curl http://localhost:3000/api/test/sliding
+curl http://localhost:3000/api/test/token-bucket
 ```
 
 A successful request returns:
 
 ```json
 {
-  "message": "Request allowed"
+  "message": "Request allowed",
+  "algorithm": "fixed"
 }
 ```
 
@@ -255,6 +260,16 @@ with the following response body:
   "message": "Too many requests"
 }
 ```
+
+#### Test Multiple Requests
+
+To quickly verify that the rate limit is working, send requests to a specific algorithm endpoint:
+
+```bash
+for i in {1..15}; do
+  echo -n "Request $i: "
+  curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/api/test/fixed
+done
 
 ### Run Tests
 
@@ -426,17 +441,20 @@ docker compose logs -f
 
 ### Test the API
 
-Once the containers are running:
+Once the containers are running, test each algorithm endpoint:
 
 ```bash
-curl http://localhost:3000/api/test
+curl http://localhost:3000/api/test/fixed
+curl http://localhost:3000/api/test/sliding
+curl http://localhost:3000/api/test/token-bucket
 ```
 
 A successful request returns:
 
 ```json
 {
-  "message": "Request allowed"
+  "message": "Request allowed",
+  "algorithm": "fixed"
 }
 ```
 
@@ -599,9 +617,9 @@ The tests cover:
 3. Token Bucket rate limiting
 4. Rate-limit configuration validation
 5. Algorithm factory
-6. Rate-limit middleware
+6. Rate-limit middleware headers (`/api/test/fixed`, `/api/test/sliding`, `/api/test/token-bucket`)
 7. Response headers
-8. 429 Too Many Requests responses
+8. 429 Too Many Requests responses per algorithm
 9. Error handling when the limiter fails
 10. Redis TTL and expiration behavior
 11. Token refill behavior

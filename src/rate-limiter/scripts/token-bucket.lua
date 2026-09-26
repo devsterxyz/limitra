@@ -28,6 +28,10 @@ lastRefill = tonumber(lastRefill)
 
 local elapsed = currentTime - lastRefill
 
+-- Date.now() is supplied by the application process.  Do not let a small
+-- backwards clock adjustment remove tokens from an existing bucket.
+elapsed = math.max(0, elapsed)
+
 local tokensToAdd = (elapsed / 1000) * refillRate
 
 local refilledTokens = math.min(
@@ -48,7 +52,9 @@ if refilledTokens < requestCost then
   local tokenNeeded = requestCost - refilledTokens
   local retryAfter = math.ceil(tokenNeeded / refillRate)
 
-  return {0, refilledTokens, retryAfter}
+  -- Redis serializes Lua numbers in an array as integers. Return the token
+  -- count as a string so the caller can retain the fractional refill amount.
+  return {0, tostring(refilledTokens), retryAfter}
 end
 
 local remaining = refilledTokens - requestCost
@@ -62,4 +68,6 @@ redis.call(
   currentTime
 )
 
-return {1, remaining}
+-- See the matching rejected response above: retaining the fraction makes the
+-- remaining-token header accurately show refill progress.
+return {1, tostring(remaining)}

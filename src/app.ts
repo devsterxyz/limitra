@@ -4,9 +4,16 @@ import { createRateLimitMiddleware } from "./rate-limiter/middleware.js";
 import { errorHandler } from "./middleware/error-handler.js";
 
 
-function createApp(limiter: RateLimiter){
+function createApp(
+  fixedLimiter: RateLimiter,
+  slidingLimiter: RateLimiter,
+  tokenBucketLimiter: RateLimiter,
+){
   const app = express()
-  const rateLimitMiddleware = createRateLimitMiddleware(limiter)
+
+  const fixedMiddleware = createRateLimitMiddleware(fixedLimiter)
+  const slidingMiddleware = createRateLimitMiddleware(slidingLimiter)
+  const tokenBucketMiddleware = createRateLimitMiddleware(tokenBucketLimiter)
 
   app.get("/", (_req, res) => {
     res.json({
@@ -14,9 +21,24 @@ function createApp(limiter: RateLimiter){
     })
   })
 
-  app.get("/api/test", rateLimitMiddleware, (_req, res) => {
+  app.get("/api/test/fixed", fixedMiddleware, (_req, res) => {
     res.json({
-      message: "Request allowed"
+      message: "Request allowed",
+      algorithm: "fixed",
+    })
+  })
+
+  app.get("/api/test/sliding", slidingMiddleware, (_req, res) => {
+    res.json({
+      message: "Request allowed",
+      algorithm: "sliding",
+    })
+  })
+
+  app.get("/api/test/token-bucket", tokenBucketMiddleware, (_req, res) => {
+    res.json({
+      message: "Request allowed",
+      algorithm: "token-bucket",
     })
   })
 

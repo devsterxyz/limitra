@@ -34,9 +34,9 @@ export class TokenBucketLimiter implements RateLimiter {
       ],
     });
 
-    const [allowedFlag, remaining, retryAfter] = result as [number, number, number]
+    const [allowedFlag, remaining, retryAfter] = result as [number, string | number, number?]
 
-    const normalizedRemaining = Math.floor(remaining)
+    const normalizedRemaining = Math.floor(Number(remaining))
 
     const response: RateLimitResult = {
       allowed: allowedFlag === 1,
@@ -44,7 +44,7 @@ export class TokenBucketLimiter implements RateLimiter {
       limit: this.config.limit,
     }
 
-    if (allowedFlag !== 1) {
+    if (allowedFlag !== 1 && retryAfter !== undefined) {
       response.reset = retryAfter
     }
 

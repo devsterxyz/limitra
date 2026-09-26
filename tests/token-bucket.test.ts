@@ -70,6 +70,21 @@ describe("Token Bucket Rate Limiter", () => {
     expect(result.remaining).toBe(1)
   })
 
+  it("allows a request once one second has refilled one token", async () => {
+    const ip = "one-second-refill-test"
+    const key = `rate-limit:token:${ip}`
+
+    await redis.hSet(key, {
+      tokens: "0",
+      lastRefill: String(Date.now() - 1000),
+    })
+
+    const result = await limiter.check(ip)
+
+    expect(result.allowed).toBe(true)
+    expect(result.remaining).toBe(0)
+  })
+
   it("handles concurrent requests", async () => {
     const ip = "concurrent-test"
 

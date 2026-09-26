@@ -8,10 +8,13 @@ const PORT = 3000
 
 await connectRedis()
 
-const config = getRateLimitConfig()
-const limiter = createRateLimiter(config)
+const baseConfig = getRateLimitConfig()
 
-const app = createApp(limiter)
+const fixedLimiter = createRateLimiter({ ...baseConfig, algorithm: "fixed" })
+const slidingLimiter = createRateLimiter({ ...baseConfig, algorithm: "sliding" })
+const tokenBucketLimiter = createRateLimiter({ ...baseConfig, algorithm: "token-bucket" })
+
+const app = createApp(fixedLimiter, slidingLimiter, tokenBucketLimiter)
 
 const server = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
