@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { beforeEach, describe, expect, it } from "vitest";
 import { getRateLimiterAlgorithm } from "../src/rate-limiter/config";
 
